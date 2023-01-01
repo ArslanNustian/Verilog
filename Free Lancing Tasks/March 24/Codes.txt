@@ -1,0 +1,283 @@
+module updown_counter(input clk,rst,up_down,output reg[1:0]count);
+
+always@(posedge clk)
+if(rst)
+count<=0;
+
+else if(up_down==1)
+count<=count+1;
+
+else if(up_down==0)
+count<=count-1;
+
+else 
+count<=count+1;
+
+endmodule
+
+module tb_updowncounter;
+
+	// Inputs
+	reg clk;
+	reg rst;
+	reg up_down;
+
+	// Outputs
+	wire [1:0] count;
+
+	// Instantiate the Unit Under Test (UUT)
+	updown_counter uut (
+		.clk(clk), 
+		.rst(rst), 
+		.up_down(up_down), 
+		.count(count)
+	);
+
+   always
+	#20 clk=~clk;
+
+	initial begin
+		// Initialize Inputs
+		clk = 0;
+		rst = 0;
+		up_down = 0;
+
+		// Wait 100 ns for global reset to finish
+		#100;
+		rst=1;
+		
+		#100
+		rst=0;
+		
+		#10
+		up_down=1;
+		
+		#300
+		up_down=0;
+		
+        
+		#1000
+      $stop;
+      $finish;		
+		  
+		// Add stimulus here
+
+	end
+      
+endmodule
+
+
+
+
+module shift_register(input clk,rst, output [3:0]out, input [1:0]sel, input [3:0]load_in, input serial_in);
+
+reg [3:0]shift_reg;
+
+assign out=shift_reg;
+
+always@(posedge clk or posedge rst)
+if(rst)
+shift_reg<=0;
+
+else if (sel==2'b00)
+shift_reg<=load_in;
+
+else if (sel==2'b01) //shift left
+shift_reg<={shift_reg[2:0],serial_in};
+
+else if (sel==2'b10)// shift right
+shift_reg<={serial_in,shift_reg[3:1]};
+
+else if (sel==2'b11)
+shift_reg<=shift_reg;
+
+else
+shift_reg<=shift_reg;
+
+
+
+endmodule
+
+module tb_shiftregister;
+
+	// Inputs
+	reg clk;
+	reg rst;
+	reg [1:0] sel;
+	reg [3:0] load_in;
+	reg serial_in;
+
+	// Outputs
+	wire [3:0] out;
+
+	// Instantiate the Unit Under Test (UUT)
+	shift_register uut (
+		.clk(clk), 
+		.rst(rst), 
+		.out(out), 
+		.sel(sel), 
+		.load_in(load_in), 
+		.serial_in(serial_in)
+	);
+
+   always
+	#10 clk=~clk;
+
+	initial begin
+		// Initialize Inputs
+		clk = 0;
+		rst = 0;
+		sel = 0;
+		load_in = 0;
+		serial_in = 0;
+
+		// Wait 100 ns for global reset to finish
+		#100;
+		rst=1;
+		
+		#100
+		rst=0;
+		
+		#100
+		load_in=9;
+		
+		#100
+		load_in=7;
+		
+		#20
+		sel=1;
+		
+		#100
+		load_in=7;
+		
+		#20
+		sel=2;
+		
+      #20
+      load_in=9;
+
+      #20
+      sel=3;		
+		  
+		  
+		// Add stimulus here
+
+	end
+      
+endmodule
+
+
+
+
+module state_machine (clk, updown, reset, out);
+input   clk, updown, reset;
+output  [1:0]out;
+reg     [1:0]out;
+reg     [1:0]state;
+     parameter S0 = 2'b00, S1 = 2'b01, S2 = 2'b10, S3 = 2'b11;
+always @ (state) begin
+case (state)
+S0:
+   out = 2'b00;
+S1:
+   out = 2'b01;
+S2:
+   out = 2'b10;
+
+S3:out = 2'b11;
+ 
+default:
+   out = 2'b00;
+endcase
+end
+always @ (posedge clk or posedge reset) begin
+if (reset)
+state <= S0;
+else
+case (state)
+   S0:
+        if (updown)
+         state <= S1;
+      else
+         state <= S3;
+   
+   
+     S1:
+      if (updown)
+         state <= S2;
+      else
+         state <= S0;
+  
+    S2:
+      if (updown)
+         state <= S3;
+      else
+         state <= S1;
+
+
+    S3:
+      if (updown)
+         state <= S1;
+      else
+         state <= S0;
+
+ 
+
+endcase
+end
+endmodule
+
+module tb_statemachine;
+
+	// Inputs
+	reg clk;
+	reg updown;
+	reg reset;
+
+	// Outputs
+	wire [1:0] out;
+
+	// Instantiate the Unit Under Test (UUT)
+	state_machine uut (
+		.clk(clk), 
+		.updown(updown), 
+		.reset(reset), 
+		.out(out)
+	);
+	
+	always
+	#5 clk=~clk;
+
+	initial begin
+		// Initialize Inputs
+		clk = 0;
+		updown = 0;
+		reset = 0;
+
+		// Wait 100 ns for global reset to finish
+		#100;
+      reset=1;
+
+
+      #100
+      reset=0;
+
+     
+	   #100
+		updown=1;
+		
+		
+		#400
+	   updown=0;
+		
+		
+		#100
+		$stop;
+		$finish;
+		
+		// Add stimulus here
+
+	end
+      
+endmodule
+
